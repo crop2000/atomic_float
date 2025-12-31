@@ -1,4 +1,5 @@
 use core::cell::UnsafeCell;
+use core::mem::transmute;
 use core::sync::atomic::{
     AtomicU64,
     Ordering::{self, *},
@@ -695,6 +696,55 @@ impl AtomicF64 {
         // static assertions above ensure that AtomicU64 and UnsafeCell<f64> are
         // compatible as pointers.
         unsafe { &*(&self.0 as *const _ as *const AtomicU64) }
+    }
+
+    /// bla
+    #[inline]
+    pub fn fetch_and(&self, val: f64, order: Ordering) -> f64 {
+        let val = f64::to_bits(val);
+        let r = self.as_atomic_bits().fetch_and(val, order);
+        f64::from_bits(r)
+    }
+
+    /// bla
+    #[inline]
+    pub fn fetch_nand(&self, val: f64, order: Ordering) -> f64 {
+        let val = f64::to_bits(val);
+        let r = self.as_atomic_bits().fetch_nand(val, order);
+        f64::from_bits(r)
+    }
+
+    /// bla
+    #[inline]
+    pub fn fetch_or(&self, val: f64, order: Ordering) -> f64 {
+        let val = f64::to_bits(val);
+        let r = self.as_atomic_bits().fetch_or(val, order);
+        f64::from_bits(r)
+    }
+
+    /// bla
+    #[inline]
+    pub fn fetch_xor(&self, val: f64, order: Ordering) -> f64 {
+        let val = f64::to_bits(val);
+        let r = self.as_atomic_bits().fetch_xor(val, order);
+        f64::from_bits(r)
+    }
+
+    /// bla
+    /// # Safety
+    /// not sure
+    #[inline]
+    pub unsafe fn from_ptr<'a>(ptr: *mut f64) -> &'a Self {
+        let u = AtomicU64::from_ptr(transmute::<*mut f64, *mut u64>(ptr));
+
+        transmute(u)
+    }
+    /// bla
+    /// # Safety
+    /// not sure
+    #[inline]
+    pub fn as_ptr(&self) -> *mut f64 {
+        unsafe { transmute(self.as_atomic_bits().as_ptr()) }
     }
 }
 
